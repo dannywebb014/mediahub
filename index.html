@@ -24,7 +24,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://dannywebb014.github.io/lifeos/fonts.css">
   <style>
     /* My Hub neutrals and type, with media.'s gold as the accent. */
     :root {
@@ -38,8 +38,8 @@
       --yellow:#f3e3a8; --yellow-t:#6e5506; --lime:#dfeab0; --lime-t:#4a5a12; --mint-green:#cfe8d4; --mint-green-t:#2f6a3c;
       --aqua-blue:#c8e6e6; --aqua-blue-t:#1f5f5f; --sky-blue:#cfe0f2; --sky-blue-t:#2a5584; --lavender:#e0daf5; --lavender-t:#4f4390;
       --pink:#f5d8e4; --pink-t:#8a2f55; --red:#f4d2cc; --red-t:#8f3226; --gray:#e8e3d8; --gray-t:#5d564b;
-      --disp:'Lora', Georgia, serif;
-      --body:'Source Sans 3', system-ui, -apple-system, Helvetica, Arial, sans-serif;
+      --disp:var(--hub-head, 'Lora', Georgia, serif);
+      --body:var(--hub-body, 'Source Sans 3', system-ui, -apple-system, Helvetica, Arial, sans-serif);
       color-scheme:light;
     }
     @media (prefers-color-scheme: dark) {
@@ -98,7 +98,7 @@
 
     /* ── Header ── */
     header { display:flex; align-items:center; gap:.5rem; margin-bottom:1.1rem; }
-    .brand { font-family:var(--disp); font-style:italic; font-weight:600; font-size:2.1rem; letter-spacing:-.03em; color:var(--logo); line-height:1; }
+    .brand { font-family:var(--disp); font-style:var(--hub-logo-style, italic); font-weight:600; font-size:2.1rem; letter-spacing:-.03em; color:var(--logo); line-height:1; }
     .brand .dot, .dot { font-style:normal; color:var(--accent); }
     .demo-tag { font-family:var(--body); font-style:normal; font-size:.75rem; font-weight:600; color:var(--muted); background:var(--input); border-radius:10px; padding:2px 8px; text-decoration:none; vertical-align:middle; }
     .icon-btn { margin-left:auto; width:40px; height:40px; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--muted); display:grid; place-items:center; box-shadow:var(--shadow); }
@@ -110,7 +110,7 @@
 
     /* ── Document switch: the main toggle ── */
     .docs { display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:4px; padding:4px; background:var(--card); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); margin-bottom:.75rem; }
-    .docs button { border:none; background:none; border-radius:8px; padding:.7rem .5rem; font-family:var(--disp); font-style:italic; font-weight:600; font-size:1.05rem; color:var(--muted); transition:background .15s, color .15s; min-height:44px; }
+    .docs button { border:none; background:none; border-radius:8px; padding:.7rem .5rem; font-family:var(--disp); font-style:var(--hub-logo-style, italic); font-weight:600; font-size:1.05rem; color:var(--muted); transition:background .15s, color .15s; min-height:44px; }
     .docs button[aria-selected="true"] { background:var(--accent); color:var(--on-accent); }
     .docs .n, .pill .n, .chip .n { font-family:var(--body); font-style:normal; font-size:.75rem; font-weight:600; opacity:.7; margin-left:.35rem; }
 
@@ -127,7 +127,7 @@
 
     /* ── Heading + toolbar ── */
     .head { display:flex; align-items:baseline; gap:.6rem; margin:.25rem .15rem .6rem; }
-    .head h1 { font-family:var(--disp); font-style:italic; font-weight:600; font-size:1.6rem; letter-spacing:-.02em; }
+    .head h1 { font-family:var(--disp); font-style:var(--hub-logo-style, italic); font-weight:600; font-size:1.6rem; letter-spacing:-.02em; }
     .head .count { font-size:.85rem; color:var(--muted); font-weight:600; }
     .tools { display:flex; gap:.5rem; margin-bottom:.6rem; }
     .search { flex:1; min-width:0; position:relative; }
@@ -172,7 +172,7 @@
     .stars i { font-style:normal; color:var(--line-strong); }
     .score { font-size:.8rem; color:var(--muted); white-space:nowrap; }
     .score b { font-size:1rem; color:var(--accent-text); }
-    .empty { color:var(--muted); text-align:center; padding:2.5rem 1rem; font-family:var(--disp); font-style:italic; grid-column:1 / -1; }
+    .empty { color:var(--muted); text-align:center; padding:2.5rem 1rem; font-family:var(--disp); font-style:var(--hub-logo-style, italic); grid-column:1 / -1; }
 
     .fab { position:fixed; right:max(16px, calc(50% - 380px + 16px)); bottom:calc(1.25rem + env(safe-area-inset-bottom)); width:56px; height:56px; border-radius:16px; border:none; background:var(--accent); color:var(--on-accent); box-shadow:var(--shadow-lg); display:grid; place-items:center; }
     .fab svg { width:24px; height:24px; }
