@@ -200,17 +200,27 @@ async function shapeProps(conn, colId, props, meta = []) {
   return out;
 }
 
+// allowNewSelectOptions is in Craft's docs, but some connections reject it as an
+// unrecognised key. It's only sent when a new option was actually made, and if
+// Craft refuses it the request goes again without it.
+async function writeItems(conn, colId, method, body, allowNew) {
+  const path = `/collections/${encodeURIComponent(colId)}/items`;
+  if (!allowNew) return craft(conn, path, { method, body: JSON.stringify(body) });
+  try {
+    return await craft(conn, path, { method, body: JSON.stringify({ ...body, allowNewSelectOptions: true }) });
+  } catch (err) {
+    if (err.status !== 400 || !/allowNewSelectOptions/.test(err.message)) throw err;
+    return craft(conn, path, { method, body: JSON.stringify(body) });
+  }
+}
+
 export const updateItem = async (conn, colId, id, title, props, allowNew, meta) =>
-  craft(conn, `/collections/${encodeURIComponent(colId)}/items`, {
-    method: "PUT",
-    body: JSON.stringify({ itemsToUpdate: [{ id, ...(title != null ? { title } : {}), properties: await shapeProps(conn, colId, props, meta) }], allowNewSelectOptions: Boolean(allowNew) }),
-  });
+  writeItems(conn, colId, "PUT",
+    { itemsToUpdate: [{ id, ...(title != null ? { title } : {}), properties: await shapeProps(conn, colId, props, meta) }] }, allowNew);
 
 export const addItem = async (conn, colId, title, props, allowNew, meta) =>
-  craft(conn, `/collections/${encodeURIComponent(colId)}/items`, {
-    method: "POST",
-    body: JSON.stringify({ items: [{ title, properties: await shapeProps(conn, colId, props, meta) }], allowNewSelectOptions: Boolean(allowNew) }),
-  });
+  writeItems(conn, colId, "POST",
+    { items: [{ title, properties: await shapeProps(conn, colId, props, meta) }] }, allowNew);
 
 export const deleteItem = (conn, colId, id) =>
   craft(conn, `/collections/${encodeURIComponent(colId)}/items`, {
