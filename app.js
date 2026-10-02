@@ -1,8 +1,8 @@
-import * as C from "./craft.js?v=5";
+import * as C from "./craft.js?v=6";
 
 // ?demo swaps Craft for made-up collections held in memory.
 const DEMO = new URLSearchParams(location.search).has("demo");
-const api = DEMO ? await import("./demo.js?v=5") : C;
+const api = DEMO ? await import("./demo.js?v=6") : C;
 const { esc } = C;
 const $ = (id) => document.getElementById(id);
 
@@ -539,7 +539,22 @@ $("set-save").addEventListener("click", () => {
 $("set-close").addEventListener("click", () => dlg.close());
 dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
 
+// Opened from search. (?col=<id>&item=<id>): that collection, with the item open.
+let deepLink = new URLSearchParams(location.search);
+function openDeepLink() {
+  const colId = deepLink.get("col");
+  if (!colId) return;
+  const col = collections.find(c => c.id === colId);
+  if (!col) return;
+  select(col.id);
+  const item = col.items.find(i => i.id === deepLink.get("item"));
+  if (item) openItem(col, item);
+  deepLink = new URLSearchParams();
+  history.replaceState(null, "", location.pathname);
+}
+
 // ─── Start ───────────────────────────────────────────────────────────
 if (DEMO) $("brand").insertAdjacentHTML("beforeend", ` <a class="demo-tag" href="./">demo</a>`);
 render();
-load();
+openDeepLink();
+load().then(openDeepLink);
