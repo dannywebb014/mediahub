@@ -1,8 +1,8 @@
-import * as C from "./craft.js";
+import * as C from "./craft.js?v=4";
 
 // ?demo swaps Craft for made-up collections held in memory.
 const DEMO = new URLSearchParams(location.search).has("demo");
-const api = DEMO ? await import("./demo.js") : C;
+const api = DEMO ? await import("./demo.js?v=4") : C;
 const { esc } = C;
 const $ = (id) => document.getElementById(id);
 
