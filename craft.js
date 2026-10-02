@@ -34,10 +34,15 @@ export async function craft(conn, path, options = {}) {
   const resp = await fetch(apiBase(conn.url) + path, { ...options, headers });
   if (!resp.ok) {
     const body = await resp.text().catch(() => "");
+    // Craft's "Validation failed" says why in the rest of the body, so keep all of it.
     let detail = body;
-    try { const j = JSON.parse(body); detail = j.error || j.message || body; } catch { /* not JSON */ }
-    if (typeof detail !== "string") detail = JSON.stringify(detail);
-    const err = new Error(`${resp.status}${detail ? ` — ${detail.slice(0, 160)}` : ""}`);
+    try {
+      const j = JSON.parse(body);
+      const head = j.error || j.message || "";
+      const rest = { ...j }; delete rest.error; delete rest.message;
+      detail = [typeof head === "string" ? head : JSON.stringify(head), Object.keys(rest).length ? JSON.stringify(rest) : ""].filter(Boolean).join(": ");
+    } catch { /* not JSON */ }
+    const err = new Error(`${resp.status}${detail ? ` — ${detail.slice(0, 600)}` : ""}`);
     err.status = resp.status;
     throw err;
   }
@@ -140,16 +145,71 @@ export async function loadAll(conns, docNames) {
   return { collections, problems };
 }
 
-export const updateItem = (conn, colId, id, title, props, allowNew) =>
+// ─── Writing items ───────────────────────────────────────────────────
+// Craft checks each item against the collection's own JSON Schema
+// (format=json-schema-items), so values are shaped to it before sending:
+// the property's real key, a number where it wants a number, a list where it
+// wants a list, and nothing it doesn't know about.
+const itemSchemas = new Map();
+async function itemSchema(conn, colId) {
+  if (!itemSchemas.has(colId)) {
+    itemSchemas.set(colId, craft(conn, `/collections/${encodeURIComponent(colId)}/schema?format=json-schema-items`)
+      .then((s) => s?.properties?.items?.items?.properties?.properties?.properties || null)
+      .catch((err) => { console.warn("No item schema, sending values as they are:", err.message); itemSchemas.delete(colId); return null; }));
+  }
+  return itemSchemas.get(colId);
+}
+
+const types = (spec) => [].concat(spec?.type || []);
+function coerce(value, spec) {
+  if (value === null || value === undefined) return value;
+  const t = types(spec);
+  const want = t.find((x) => x !== "null") || "";
+  if (want === "array") {
+    const list = Array.isArray(value) ? value : String(value) === "" ? [] : [value];
+    return list.map((v) => coerce(v, spec.items || {}));
+  }
+  if (Array.isArray(value)) value = value.join(", ");
+  if (want === "number" || want === "integer") {
+    const n = Number(value);
+    return Number.isFinite(n) ? (want === "integer" ? Math.round(n) : n) : null;
+  }
+  if (want === "boolean") return value === true || value === "true";
+  if (want === "string") {
+    const text = String(value);
+    if (spec.format === "date") return text.slice(0, 10);
+    return text;
+  }
+  return value;
+}
+
+// props: { key: value } from the editor; meta: the collection's normalised props (for names).
+async function shapeProps(conn, colId, props, meta = []) {
+  const schema = await itemSchema(conn, colId);
+  if (!schema) return props;
+  const out = {};
+  for (const [key, value] of Object.entries(props)) {
+    const name = meta.find((p) => p.key === key)?.name;
+    // The editor's key, or the property Craft describes by the same name.
+    const target = key in schema ? key
+      : Object.keys(schema).find((k) => schema[k]?.description === name || schema[k]?.title === name);
+    if (!target) { console.warn(`Craft's schema has no property "${name || key}"; leaving it out.`); continue; }
+    if ((value === null || value === "") && !types(schema[target]).includes("null") && types(schema[target])[0] !== "string") continue;
+    out[target] = coerce(value, schema[target]);
+  }
+  return out;
+}
+
+export const updateItem = async (conn, colId, id, title, props, allowNew, meta) =>
   craft(conn, `/collections/${encodeURIComponent(colId)}/items`, {
     method: "PUT",
-    body: JSON.stringify({ itemsToUpdate: [{ id, ...(title != null ? { title } : {}), properties: props }], allowNewSelectOptions: Boolean(allowNew) }),
+    body: JSON.stringify({ itemsToUpdate: [{ id, ...(title != null ? { title } : {}), properties: await shapeProps(conn, colId, props, meta) }], allowNewSelectOptions: Boolean(allowNew) }),
   });
 
-export const addItem = (conn, colId, title, props, allowNew) =>
+export const addItem = async (conn, colId, title, props, allowNew, meta) =>
   craft(conn, `/collections/${encodeURIComponent(colId)}/items`, {
     method: "POST",
-    body: JSON.stringify({ items: [{ title, properties: props }], allowNewSelectOptions: Boolean(allowNew) }),
+    body: JSON.stringify({ items: [{ title, properties: await shapeProps(conn, colId, props, meta) }], allowNewSelectOptions: Boolean(allowNew) }),
   });
 
 export const deleteItem = (conn, colId, id) =>

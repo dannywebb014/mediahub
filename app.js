@@ -459,7 +459,7 @@ $("sheet-save").addEventListener("click", async () => {
       sheet.close();
       render();
       try {
-        await api.updateItem(conn, col.id, item.id, titleChanged ? title : null, props, newOptions);
+        await api.updateItem(conn, col.id, item.id, titleChanged ? title : null, props, newOptions, col.schema.props);
         toast("Saved to Craft");
       } catch (err) {
         Object.assign(item, before);
@@ -468,7 +468,7 @@ $("sheet-save").addEventListener("click", async () => {
       }
     } else {
       const props = changes(col, {}, draft.props);
-      const res = await api.addItem(conn, col.id, title, props, newOptions);
+      const res = await api.addItem(conn, col.id, title, props, newOptions, col.schema.props);
       const made = res.items?.[0];
       col.items.unshift(made ? { ...C.normaliseItem(made), title: C.stripMd(made.title) || title, props: { ...props, ...(made.properties || {}) } } : { id: `tmp-${Date.now()}`, title, props, preview: "" });
       sheet.close();
