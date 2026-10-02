@@ -44,6 +44,7 @@ export async function craft(conn, path, options = {}) {
     } catch { /* not JSON */ }
     const err = new Error(`${resp.status}${detail ? ` — ${detail.slice(0, 600)}` : ""}`);
     err.status = resp.status;
+    try { err.body = JSON.parse(body); } catch { /* not JSON */ }
     throw err;
   }
   return resp.json();
@@ -200,17 +201,48 @@ async function shapeProps(conn, colId, props, meta = []) {
   return out;
 }
 
-// allowNewSelectOptions is in Craft's docs, but some connections reject it as an
-// unrecognised key. It's only sent when a new option was actually made, and if
-// Craft refuses it the request goes again without it.
+// Craft connections don't all accept the same fields (one rejected
+// allowNewSelectOptions, which the docs list). When Craft names fields it
+// doesn't recognise, or property values it won't take, they're removed and the
+// request goes again, up to three times. Dropped property values are reported
+// back (result.dropped) so the page can say what didn't save.
+function removeAt(obj, path, key) {
+  let node = obj;
+  for (const step of path) { if (node == null) return false; node = node[step]; }
+  if (node == null || typeof node !== "object") return false;
+  if (key === undefined) return false;
+  if (!(key in node)) return false;
+  delete node[key];
+  return true;
+}
 async function writeItems(conn, colId, method, body, allowNew) {
   const path = `/collections/${encodeURIComponent(colId)}/items`;
-  if (!allowNew) return craft(conn, path, { method, body: JSON.stringify(body) });
-  try {
-    return await craft(conn, path, { method, body: JSON.stringify({ ...body, allowNewSelectOptions: true }) });
-  } catch (err) {
-    if (err.status !== 400 || !/allowNewSelectOptions/.test(err.message)) throw err;
-    return craft(conn, path, { method, body: JSON.stringify(body) });
+  let payload = allowNew ? { ...body, allowNewSelectOptions: true } : structuredClone(body);
+  const dropped = [];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const result = await craft(conn, path, { method, body: JSON.stringify(payload) });
+      return Object.assign(result || {}, { dropped });
+    } catch (err) {
+      const details = err.status === 400 ? err.body?.details || [] : [];
+      if (attempt >= 3 || !details.length) throw err;
+      let changed = false;
+      for (const d of details) {
+        const at = Array.isArray(d.path) ? d.path : [];
+        if (d.code === "unrecognized_keys") {
+          for (const k of d.keys || []) changed = removeAt(payload, at, k) || changed;
+        } else {
+          // A property value Craft won't take: items[0].properties.<key>(...)
+          const i = at.indexOf("properties");
+          if (i >= 0 && at.length > i + 1) {
+            const key = at[i + 1];
+            if (removeAt(payload, at.slice(0, i + 1), key)) { dropped.push(String(key)); changed = true; }
+          }
+        }
+      }
+      if (!changed) throw err;
+      console.warn("Craft refused part of the item; sending again without it:", JSON.stringify(details));
+    }
   }
 }
 

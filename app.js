@@ -1,8 +1,8 @@
-import * as C from "./craft.js?v=4";
+import * as C from "./craft.js?v=5";
 
 // ?demo swaps Craft for made-up collections held in memory.
 const DEMO = new URLSearchParams(location.search).has("demo");
-const api = DEMO ? await import("./demo.js?v=4") : C;
+const api = DEMO ? await import("./demo.js?v=5") : C;
 const { esc } = C;
 const $ = (id) => document.getElementById(id);
 
@@ -31,6 +31,9 @@ function applyTheme() {
   else delete document.documentElement.dataset.theme;
 }
 applyTheme();
+
+// Column names for the property keys Craft refused, for the toast.
+const droppedNames = (col, keys) => keys.map(k => col.schema.props.find(p => p.key === k || p.name === k)?.name || k).join(", ");
 
 // ─── Toasts ──────────────────────────────────────────────────────────
 // Every failed write says so: a change that silently didn't reach Craft is
@@ -459,8 +462,8 @@ $("sheet-save").addEventListener("click", async () => {
       sheet.close();
       render();
       try {
-        await api.updateItem(conn, col.id, item.id, titleChanged ? title : null, props, newOptions, col.schema.props);
-        toast("Saved to Craft");
+        const res = await api.updateItem(conn, col.id, item.id, titleChanged ? title : null, props, newOptions, col.schema.props);
+        toast(res?.dropped?.length ? `Saved, but Craft wouldn’t take: ${droppedNames(col, res.dropped)}` : "Saved to Craft", res?.dropped?.length ? "err" : "");
       } catch (err) {
         Object.assign(item, before);
         render();
@@ -473,7 +476,7 @@ $("sheet-save").addEventListener("click", async () => {
       col.items.unshift(made ? { ...C.normaliseItem(made), title: C.stripMd(made.title) || title, props: { ...props, ...(made.properties || {}) } } : { id: `tmp-${Date.now()}`, title, props, preview: "" });
       sheet.close();
       render();
-      toast("Added to Craft");
+      toast(res?.dropped?.length ? `Added, but Craft wouldn’t take: ${droppedNames(col, res.dropped)}` : "Added to Craft", res?.dropped?.length ? "err" : "");
       if (!made) load();
     }
     if (newOptions) load();
