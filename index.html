@@ -316,6 +316,10 @@
 
   <div class="toasts" id="toasts"></div>
   <!-- Bump v= with every change to app.js or craft.js so phones don't keep running a cached copy. -->
-  <script type="module" src="app.js?v=6"></script>
+  <script type="module" src="app.js?v=7"></script>
+  <script>
+    // Opens fast and works with no signal (sw.js keeps the app's files here).
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(err => console.warn("Offline copy:", err));
+  </script>
 </body>
 </html>
