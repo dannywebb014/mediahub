@@ -1,0 +1,83 @@
+<div class="page">  <div class="glow" aria-hidden="true"></div>
+  <div class="wrap">
+    <header>
+      <span class="brand" id="brand">media<span class="dot">.</span></span>
+      <button type="button" class="icon-btn" id="refresh" aria-label="Refresh from Craft" title="Refresh from Craft">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="open-settings" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </header>
+
+    <nav class="docs" id="docs" role="tablist" aria-label="Documents" hidden></nav>
+    <nav class="cols" id="cols" aria-label="Collections" hidden></nav>
+    <div id="notices"></div>
+
+    <section id="toolbar" hidden>
+      <div class="head"><h1 id="heading"></h1><span class="count" id="count"></span></div>
+      <div class="tools">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input class="field" id="search" type="search" autocomplete="off" aria-label="Search">
+        </div>
+        <select class="field" id="sort" aria-label="Sort"></select>
+      </div>
+      <div id="filters"></div>
+    </section>
+
+    <main class="list" id="list"></main>
+  </div>
+
+  <button type="button" class="fab" id="add" aria-label="Add" title="Add (n)" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <dialog id="sheet" aria-label="Item">
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <span class="kicker" id="sheet-kicker"></span>
+        <button type="button" class="icon-btn" id="sheet-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div class="sheet-body">
+        <div id="sheet-fields"></div>
+        <div class="content" id="sheet-content" hidden></div>
+      </div>
+      <div class="sheet-foot">
+        <button type="button" class="btn danger" id="sheet-delete">Delete</button>
+        <button type="button" class="btn primary" id="sheet-save">Save</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="settings" aria-label="Settings">
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <span class="brand" style="font-size:1.5rem">settings<span class="dot">.</span></span>
+        <button type="button" class="icon-btn" id="set-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div class="sheet-body">
+        <div id="set-conns"></div>
+        <label class="f" for="set-docs">Craft documents to show, one per line</label>
+        <textarea class="field" id="set-docs" rows="3"></textarea>
+        <p class="note" style="margin-top:.35rem">Every collection inside each document appears, in this order.</p>
+        <label class="f" for="set-url">Craft API URL (optional)</label>
+        <input class="field" id="set-url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://connect.craft.do/links/…/api/v1">
+        <label class="f" for="set-key">API key, if the connection has one</label>
+        <input class="field" id="set-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <p class="note" style="margin-top:.35rem">Only needed if the documents aren’t in a space tasks. is connected to. Use an <b>All Documents</b> or <b>Selected Documents</b> connection from Craft’s Imagine tab. It stays in this browser.</p>
+        <label class="f" for="set-theme">Theme</label>
+        <select class="field" id="set-theme"><option value="system">Match the system</option><option value="light">Light</option><option value="dark">Dark</option></select>
+        <p class="test-result" id="set-result"></p>
+      </div>
+      <div class="sheet-foot"><button type="button" class="btn primary" id="set-save">Save and reload</button></div>
+    </div>
+  </dialog>
+
+  <div class="toasts" id="toasts"></div>
+  <!-- Bump v= with every change to app.js or craft.js so phones don't keep running a cached copy. -->
+</div>
