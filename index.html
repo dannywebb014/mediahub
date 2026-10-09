@@ -29,7 +29,7 @@
     // Then the app itself (embed.js), the same code lifeOS runs inside its page.
     import { requireAuth } from "/lifeos/auth.js";
     import { standalone } from "/lifeos/embed.js";
-    await requireAuth();
+    await requireAuth({ allowDemo: true });
     await standalone(new URL("./embed.js", location.href).href);
   </script>
 </head>
